@@ -5,11 +5,12 @@
 | 目录 | 项目 | 技术栈 |
 |------|------|--------|
 | [`resume-editor`](./resume-editor) | 简历编辑器：Markdown 编辑、A4 实时预览、自动一页排版、PDF 导出 | HTML / JS + Python（零依赖） |
+| [`badminton-scorer`](./badminton-scorer) | 羽毛球计分器：21 分制、单打/双打发球区、局点赛点、暂停换边、本地历史 | HTML / JS（零依赖，可离线） |
 | [`agent-skills`](./agent-skills) | 为日常工作流编写的 Agent Skills（Cursor / Claude Code / Codex 通用） | Markdown + Shell / Python |
 | [`feishu-doc-converter-extension`](./feishu-doc-converter-extension) | 飞书文档转换 Chrome 插件：一键转为公众号、知乎、掘金、小红书排版 | Vue 3 + Vite + Chrome Extension |
 | [`tab-manager-extension`](./tab-manager-extension) | 标签页智能分组 Chrome / Edge 插件 | 原生 JS + Chrome Extension |
 | [`local-media-cropper`](./local-media-cropper) | 本地图片 / 视频框选裁剪工具 | HTML / JS + Python + ffmpeg |
-| [`ai-model-processor`](./ai-model-processor) | 多模型批量处理框架：CSV 输入、Provider 可插拔、批量调用与结果导出 | Python |
+| [`ai-model-processor`](./ai-model-processor) | 多模型批量处理：CSV 输入、断点续传、多模型对比、Provider 可插拔 | Python |
 | [`human-detect-macos`](./human-detect-macos) | macOS 人体姿态与敏感内容检测 App | Swift / SwiftUI + Vision + Core ML |
 
 ## Agent Skills 列表

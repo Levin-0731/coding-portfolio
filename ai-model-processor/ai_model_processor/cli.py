@@ -16,16 +16,17 @@ def main() -> None:
     run_parser.add_argument("--config", required=True, help="Path to YAML config.")
     run_parser.add_argument("--log-file", default="logs/batch.log", help="Path to log file.")
     run_parser.add_argument("--verbose", action="store_true", help="Enable console debug logs.")
+    run_parser.add_argument("--fresh", action="store_true", help="忽略已有输出，全部重跑。")
 
     args = parser.parse_args()
     if args.command == "run":
         _setup_logging(Path(args.log_file), args.verbose)
         config = load_config(args.config)
-        summary = run_batch(config)
+        summary = run_batch(config, resume=not args.fresh)
         print(
             "Completed: "
             f"total={summary.total}, succeeded={summary.succeeded}, failed={summary.failed}, "
-            f"elapsed={summary.elapsed_seconds:.2f}s, output={summary.output_path}"
+            f"skipped={summary.skipped}, elapsed={summary.elapsed_seconds:.2f}s, output={summary.output_path}"
         )
 
 

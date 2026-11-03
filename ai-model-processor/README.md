@@ -10,6 +10,8 @@
 - mock provider，可无密钥跑通端到端流程
 - OpenAI Chat Completions provider 初版
 - 逐行日志、进度条、耗时预估
+- 断点续传：每处理完一行就写回输出。再次运行时跳过已成功的行，失败行自动重试。`--fresh` 全部重跑
+- 多模型对比：在 YAML 里写 `models` 列表，同一批输入各跑一遍，结果分列写在同一张表
 - pytest 测试覆盖核心链路
 
 ## 安装
@@ -67,6 +69,35 @@ api:
 export OPENAI_API_KEY="..."
 ai-model-processor run --config config/your-openai-config.yaml
 ```
+
+中断后直接再执行同一条命令即可续跑。想丢掉已有结果重跑时加 `--fresh`。
+
+## 多模型对比
+
+`models` 里每一项可以单独指定 provider、模型和 options。输出列默认是 `result_<模型名>`、`error_<模型名>`。
+
+```yaml
+task_type: text_to_text
+models:
+  - provider: openai
+    model: gpt-4.1-mini
+  - provider: openai
+    model: gpt-4.1
+    api:
+      api_key_env: OPENAI_API_KEY
+input:
+  path: examples/sample_input.csv
+  format: csv
+  id_column: id
+  fields:
+    text: text
+output:
+  path: outputs/compare.csv
+prompt:
+  template: "请把下面的文本改写得更简洁：{text}"
+```
+
+对比模式按行里的 `id` 判断哪些格子已经成功，所以续跑前不要改这一列。
 
 ## 设计原则
 
