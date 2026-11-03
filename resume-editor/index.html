@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>简历</title>
+<style>
+  :root {
+    --bg: #f7f7f6;
+    --panel: #fcfcfb;
+    --line: #ebebe9;
+    --text: #1d1d1f;
+    --muted: #8e8e8c;
+    --faint: #c2c2bf;
+    --hover: #f0f0ee;
+    --active: #e8e8e5;
+    --accent: #2563eb;
+    --ok: #16a34a;
+    --warn: #dc2626;
+    --mono: "SF Mono", ui-monospace, Menlo, "PingFang SC", monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    font: 13px/1.5 -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif;
+    color: var(--text); background: var(--bg); -webkit-font-smoothing: antialiased;
+  }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; padding: 0; }
+  input { font: inherit; color: inherit; }
+
+  .app { display: grid; grid-template-columns: 232px 1fr; height: 100vh; }
+  .app.no-sidebar { grid-template-columns: 0 1fr; }
+  .app.no-sidebar .sidebar { visibility: hidden; }
+
+  /* ---------- 侧栏 ---------- */
+  .sidebar {
+    display: flex; flex-direction: column; min-height: 0; overflow: hidden;
+    background: var(--panel); border-right: 1px solid var(--line);
+  }
+  .sb-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 12px 6px 16px; font-size: 11px; color: var(--muted); letter-spacing: .04em;
+  }
+  .sb-head:first-child { padding-top: 16px; }
+  .list { list-style: none; margin: 0; padding: 0 8px 8px; overflow: auto; }
+  #resumeList { flex: 0 1 auto; max-height: 55%; }
+  #exportList { flex: 1 1 auto; }
+  .item {
+    position: relative; display: flex; align-items: center; gap: 8px;
+    padding: 6px 8px; border-radius: 6px; cursor: pointer; user-select: none;
+  }
+  .item:hover { background: var(--hover); }
+  .item.active { background: var(--active); }
+  .item .body { flex: 1; min-width: 0; }
+  .item .label { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .item.active .label { font-weight: 500; }
+  .item .sub { display: block; font-size: 11px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .item .meta { font-size: 11px; color: var(--faint); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .item .more { display: none; width: 22px; height: 22px; border-radius: 4px; color: var(--muted); }
+  .item .more:hover { background: var(--active); color: var(--text); }
+  .item:hover .more, .item .more.open { display: grid; place-items: center; }
+  .item:hover .meta { display: none; }
+  .item input.rename {
+    width: 100%; padding: 1px 4px; margin: -2px -5px; border: 1px solid var(--accent);
+    border-radius: 4px; outline: 0; background: #fff;
+  }
+  .item.flash { animation: flash 1.6s ease-out; }
+  @keyframes flash { from { background: #dbeafe; } }
+  .empty { padding: 4px 16px; font-size: 12px; color: var(--faint); }
+  .sb-foot {
+    padding: 10px 16px; border-top: 1px solid var(--line); font-size: 11px; color: var(--muted);
+  }
+  .sb-foot button { color: var(--muted); text-decoration: underline; text-underline-offset: 2px; }
+  .sb-foot button:hover { color: var(--text); }
+
+  .icon-btn {
+    display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 6px; color: var(--muted);
+  }
+  .icon-btn:hover { background: var(--hover); color: var(--text); }
+  .icon-btn svg { width: 16px; height: 16px; }
+
+  /* ---------- 工作区 ---------- */
+  .workspace { display: grid; grid-template-rows: auto 1fr; min-width: 0; min-height: 0; }
+  .topbar {
+    display: flex; align-items: center; gap: 6px; height: 46px; padding: 0 12px 0 10px;
+    border-bottom: 1px solid var(--line); background: var(--panel);
+  }
+  .doc-name {
+    max-width: 40%; padding: 3px 6px; border-radius: 5px; font-weight: 500;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: text;
+  }
+  .doc-name:hover { background: var(--hover); }
+  .save-state { font-size: 12px; color: var(--faint); white-space: nowrap; }
+  .save-state.warn { color: var(--warn); }
+  .spacer { flex: 1; }
+  .fit { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); margin-right: 6px; white-space: nowrap; }
+  .fit::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--ok); }
+  .fit.warn { color: var(--warn); }
+  .fit.warn::before { background: var(--warn); }
+  .ghost { padding: 5px 10px; border-radius: 6px; color: #444; }
+  .ghost:hover, .ghost.open { background: var(--hover); }
+  .primary {
+    padding: 5px 12px; border-radius: 6px; background: var(--text); color: #fff; margin-left: 4px;
+  }
+  .primary:hover { background: #000; }
+  .primary:disabled { opacity: .5; cursor: progress; }
+
+  .panes { --ed: 44%; display: grid; grid-template-columns: var(--ed) 1px 1fr; min-height: 0; }
+  .splitter { position: relative; background: var(--line); cursor: col-resize; }
+  .splitter::after { content: ""; position: absolute; inset: 0 -4px; z-index: 2; }
+  .splitter:hover, .splitter.dragging { background: var(--faint); }
+  .panes.dragging { user-select: none; cursor: col-resize; }
+  .panes.dragging iframe, .panes.dragging .preview-pane { pointer-events: none; }
+
+  /* ---------- 编辑器（textarea 叠在高亮层之上） ---------- */
+  .editor-scroll { overflow: auto; background: #fff; min-width: 0; }
+  .editor { position: relative; display: grid; min-height: 100%; }
+  .editor > pre, .editor > textarea {
+    grid-area: 1 / 1; margin: 0; border: 0; padding: 28px 36px 45vh;
+    font: 13px/1.85 var(--mono); letter-spacing: 0; tab-size: 2;
+    white-space: pre-wrap; overflow-wrap: break-word; word-break: normal;
+  }
+  .editor > pre { pointer-events: none; color: #2b2b2b; }
+  .editor > textarea {
+    width: 100%; height: 100%; resize: none; overflow: hidden; outline: 0;
+    background: transparent; color: transparent; caret-color: var(--text);
+  }
+  .editor > textarea::selection { background: rgba(37, 99, 235, .16); }
+  .editor > textarea::placeholder { color: var(--faint); }
+  .t-mark { color: #c4c4c0; }
+  .t-h1 { color: #000; }
+  .t-h2 { color: var(--accent); }
+  .t-h3 { color: #111; }
+  .t-date { color: var(--muted); }
+  .t-bullet { color: var(--accent); }
+  .t-bold { color: #000; background: #f3f3f1; border-radius: 2px; }
+  .t-tag { color: var(--accent); }
+  .t-link { color: #555; }
+  .t-url { color: #b0b0ac; }
+  .ln-flash { background: #fef3c7; border-radius: 2px; transition: background 1.2s; }
+
+  /* ---------- 预览 ---------- */
+  .preview-pane { overflow: auto; padding: 32px; min-width: 0; }
+  .page-holder { margin: 0 auto; transform-origin: top left; }
+  .preview-pane .page { cursor: pointer; }
+  .preview-pane .page [data-line]:hover { background: rgba(37, 99, 235, .05); }
+
+  /* ---------- 弹层 / 菜单 / 提示 ---------- */
+  .pop {
+    position: fixed; z-index: 30; min-width: 180px; padding: 6px;
+    background: #fff; border: 1px solid var(--line); border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.08), 0 2px 6px rgba(0,0,0,.04);
+  }
+  .pop[hidden] { display: none; }
+  .menu button {
+    display: block; width: 100%; text-align: left; padding: 6px 10px; border-radius: 6px; white-space: nowrap;
+  }
+  .menu button:hover { background: var(--hover); }
+  .menu button.danger { color: var(--warn); }
+  .menu hr { border: 0; border-top: 1px solid var(--line); margin: 4px 6px; }
+
+  #layoutPop { width: 270px; padding: 12px 14px; }
+  .p-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 30px; }
+  .p-row + .p-row { margin-top: 2px; }
+  .p-sep { border-top: 1px solid var(--line); margin: 10px 0; }
+  .p-slider { display: grid; grid-template-columns: 52px 1fr 40px; align-items: center; gap: 8px; font-size: 12px; color: #555; }
+  .p-slider input { width: 100%; accent-color: var(--text); }
+  .p-slider .val { text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .sliders.disabled { opacity: .4; pointer-events: none; }
+  .p-btns { display: flex; gap: 6px; }
+  .p-btns button { padding: 3px 9px; border-radius: 5px; border: 1px solid var(--line); font-size: 12px; }
+  .p-btns button:hover { background: var(--hover); }
+  .toggle { position: relative; width: 30px; height: 18px; appearance: none; margin: 0; border-radius: 999px; background: #d9d9d6; cursor: pointer; transition: background .15s; }
+  .toggle::after { content: ""; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: #fff; transition: transform .15s; box-shadow: 0 1px 2px rgba(0,0,0,.15); }
+  .toggle:checked { background: var(--text); }
+  .toggle:checked::after { transform: translateX(12px); }
+
+  #helpPop { width: 340px; padding: 12px 14px; font-size: 12px; color: #444; }
+  #helpPop table { width: 100%; border-collapse: collapse; }
+  #helpPop td { padding: 4px 0; vertical-align: top; }
+  #helpPop td:first-child { font-family: var(--mono); color: #111; padding-right: 12px; white-space: nowrap; }
+  #helpPop .keys { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); color: var(--muted); line-height: 1.9; }
+  kbd { font: 11px var(--mono); padding: 0 4px; border: 1px solid var(--line); border-radius: 3px; background: var(--bg); color: #444; }
+
+  .toast {
+    position: fixed; left: 50%; bottom: 24px; z-index: 40; transform: translate(-50%, 12px);
+    display: flex; align-items: center; gap: 12px; padding: 8px 14px; border-radius: 8px;
+    background: #1d1d1f; color: #fff; font-size: 12px; opacity: 0; pointer-events: none;
+    transition: opacity .18s, transform .18s;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+  .toast button { color: #93c5fd; }
+
+  @media print {
+    html, body { background: #fff; height: auto; }
+    .sidebar, .topbar, .editor-scroll, .splitter, .pop, .toast { display: none !important; }
+    .app, .workspace, .panes { display: block; height: auto; }
+    .preview-pane { padding: 0; overflow: visible; }
+    .page-holder { transform: none !important; width: auto !important; height: auto !important; margin: 0 !important; }
+    .page { box-shadow: none !important; }
+    .page [data-line]:hover { background: none !important; }
+  }
+</style>
+<style id="resume-css">
+  .page {
+    --fs: 13px; --lh: 1.55; --gap: 12px; --px: 40px; --py: 32px;
+    --text: #1f1f1f; --muted: #444; --tag: #2f6fdf; --tag-bg: #eaf1fe; --line: #d9d9d9;
+    width: 210mm; height: 296.6mm; overflow: hidden; background: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,.04), 0 8px 28px rgba(0,0,0,.07);
+    padding: var(--py) var(--px);
+    font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+    font-size: var(--fs); line-height: var(--lh); color: var(--text);
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+  .page .content { position: relative; }
+  .page p, .page ul { margin: 0; }
+  .page strong { font-weight: 700; color: #000; }
+
+  .r-header { position: relative; margin-bottom: calc(var(--gap) * 1.1); min-height: 30mm; }
+  .r-header.has-photo { padding-right: 31mm; }
+  .r-header:not(.has-photo) { min-height: 0; }
+  .r-name { font-size: calc(var(--fs) * 1.85); font-weight: 700; line-height: 1.3; margin-bottom: calc(var(--gap) * .45); letter-spacing: 1px; }
+  .r-contact { color: var(--muted); }
+  .r-photo { position: absolute; right: 0; top: 0; width: 25mm; height: 33.3mm; object-fit: cover; }
+
+  .r-section { margin-top: var(--gap); }
+  .r-section-title {
+    font-size: calc(var(--fs) * 1.12); font-weight: 700; line-height: 1.5;
+    border-left: 4px solid #222; padding-left: 10px;
+    padding-bottom: 3px; border-bottom: 1px solid var(--line);
+    margin-bottom: calc(var(--gap) * .55);
+  }
+  .r-entry-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-weight: 700; color: #000; }
+  .r-entry-head + * { margin-top: 1px; }
+  .r-entry-head:not(:first-child) { margin-top: calc(var(--gap) * .45); }
+  .r-entry-head .date { font-weight: 500; white-space: nowrap; flex-shrink: 0; }
+  .r-tag {
+    display: inline-block; font-weight: 500; color: var(--tag); background: var(--tag-bg);
+    padding: 0 6px; margin-left: 4px; border-radius: 2px; font-size: .92em; line-height: 1.45;
+  }
+  .r-link { color: #8a8a8a; font-style: italic; text-decoration: none; }
+  .r-list { padding-left: 1.5em; }
+  .r-list .r-list { padding-left: 1.3em; }
+  .r-list li { padding-left: .1em; }
+  .r-list li::marker { font-size: .9em; }
+
+  @page { size: A4; margin: 0; }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <aside class="sidebar">
+    <div class="sb-head">
+      <span>简历</span>
+      <button class="icon-btn" id="btnNew" title="新建简历">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M8 3.5v9M3.5 8h9"/></svg>
+      </button>
+    </div>
+    <ul class="list" id="resumeList"></ul>
+    <div class="sb-head"><span>导出记录</span></div>
+    <ul class="list" id="exportList"></ul>
+    <div class="sb-foot" id="sbFoot"></div>
+  </aside>
+
+  <main class="workspace">
+    <header class="topbar">
+      <button class="icon-btn" id="btnSidebar" title="显示/隐藏侧栏  ⌘\">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="2" y="3" width="12" height="10" rx="2"/><path d="M6 3v10"/></svg>
+      </button>
+      <span class="doc-name" id="docName" title="点击重命名"></span>
+      <span class="save-state" id="saveState"></span>
+      <div class="spacer"></div>
+      <span class="fit" id="status"></span>
+      <button class="ghost" id="btnLayout">排版</button>
+      <button class="ghost" id="btnHelp">语法</button>
+      <button class="primary" id="btnExport" title="⌘P">导出 PDF</button>
+    </header>
+
+    <div class="panes" id="panes">
+      <div class="editor-scroll" id="editorScroll">
+        <div class="editor">
+          <pre id="hl" aria-hidden="true"></pre>
+          <textarea id="source" spellcheck="false" placeholder="# 姓名"></textarea>
+        </div>
+      </div>
+      <div class="splitter" id="splitter" title="拖动调整宽度，双击还原"></div>
+      <div class="preview-pane" id="previewPane">
+        <div class="page-holder" id="holder">
+          <div class="page" id="page"><div class="content" id="content"></div></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="pop" id="layoutPop" hidden>
+  <div class="p-row"><span>自动排满一页</span><input type="checkbox" class="toggle" id="autoFit" /></div>
+  <div class="sliders" id="sliders">
+    <div class="p-slider"><span>字号</span><input type="range" id="fs" min="9" max="16" step="0.1" /><span class="val" id="fsVal"></span></div>
+    <div class="p-slider"><span>行高</span><input type="range" id="lh" min="1.2" max="1.9" step="0.01" /><span class="val" id="lhVal"></span></div>
+    <div class="p-slider"><span>模块间距</span><input type="range" id="gap" min="2" max="26" step="0.5" /><span class="val" id="gapVal"></span></div>
+    <div class="p-slider"><span>页边距</span><input type="range" id="px" min="16" max="70" step="1" /><span class="val" id="pxVal"></span></div>
+  </div>
+  <div class="p-sep"></div>
+  <div class="p-row"><span>显示照片</span><input type="checkbox" class="toggle" id="showPhoto" /></div>
+  <div class="p-row">
+    <span style="color:var(--muted);font-size:12px">所有简历共用</span>
+    <div class="p-btns"><button id="btnPhoto">更换照片</button><button id="btnPhotoReset">默认</button></div>
+  </div>
+  <input type="file" id="photoInput" accept="image/*" hidden />
+</div>
+
+<div class="pop" id="helpPop" hidden>
+  <table>
+    <tr><td># 姓名</td><td>顶部大标题，下面几行是联系方式</td></tr>
+    <tr><td>## 工作经历</td><td>模块标题</td></tr>
+    <tr><td>### 公司 || 日期</td><td>经历标题，日期右对齐</td></tr>
+    <tr><td>- 列表</td><td>缩进 2 空格为二级列表</td></tr>
+    <tr><td>**加粗**</td><td>加粗</td></tr>
+    <tr><td>[[211]]</td><td>蓝色标签</td></tr>
+    <tr><td>[文字](https://…)</td><td>链接</td></tr>
+  </table>
+  <div class="keys">
+    <kbd>⌘S</kbd> 保存 · <kbd>⌘P</kbd> 导出 · <kbd>⌘B</kbd> 加粗 · <kbd>⌘\</kbd> 侧栏<br />
+    <kbd>Tab</kbd> / <kbd>⇧Tab</kbd> 缩进列表 · 列表内回车自动续行<br />
+    点击右侧预览，左侧跳到对应行
+  </div>
+</div>
+
+<div class="pop menu" id="menu" hidden></div>
+<div class="toast" id="toast"><span id="toastText"></span><button id="toastAction" hidden></button></div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const els = {
+  app: $('app'), resumeList: $('resumeList'), exportList: $('exportList'), sbFoot: $('sbFoot'),
+  docName: $('docName'), saveState: $('saveState'), status: $('status'),
+  panes: $('panes'), scroll: $('editorScroll'), hl: $('hl'), source: $('source'),
+  pane: $('previewPane'), holder: $('holder'), page: $('page'), content: $('content'),
+  layoutPop: $('layoutPop'), helpPop: $('helpPop'), menu: $('menu'),
+  autoFit: $('autoFit'), sliders: $('sliders'), showPhoto: $('showPhoto'), btnExport: $('btnExport'),
+};
+
+const BLANK = `# 姓名
+联系电话：| 邮箱：
+求职意向：
+
+## 教育经历
+### 学校 专业 [[标签]] || 2021年09月 - 2025年06月
+- 
+
+## 工作经历
+### 公司 ｜ 职位 || 2025年07月 - 至今
+- **【关键词】**做了什么，带来了什么结果
+
+## 个人总结
+- 
+`;
+const DEFAULT_PHOTO = 'photo.jpg';
+const DEFAULT_PARAMS = { fs: 13, lh: 1.55, gap: 12, px: 40 };
+const SLIDERS = [
+  { key: 'fs', unit: 'px', fmt: (v) => v.toFixed(1) },
+  { key: 'lh', unit: '', fmt: (v) => v.toFixed(2) },
+  { key: 'gap', unit: 'px', fmt: (v) => v.toFixed(1) },
+  { key: 'px', unit: 'px', fmt: (v) => v.toFixed(0) },
+];
+
+/* ---------- 本地偏好 ---------- */
+const LS = {
+  get(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch { return false; } },
+};
+const PREFS_KEY = 'resume-editor:prefs';
+const PHOTO_KEY = 'resume-editor:photo';
+const prefs = { current: null, sidebar: true, split: null, docs: {}, ...LS.get(PREFS_KEY, {}) };
+const savePrefs = () => LS.set(PREFS_KEY, prefs);
+const docSettings = (name) => {
+  const s = prefs.docs[name] || {};
+  return (prefs.docs[name] = { autoFit: true, photo: true, ...s, params: { ...DEFAULT_PARAMS, ...s.params } });
+};
+const photoSrc = () => LS.get(PHOTO_KEY, null) || DEFAULT_PHOTO;
+
+/* ---------- 存储：本地服务（md 文件）或浏览器 localStorage ---------- */
+const enc = encodeURIComponent;
+async function api(path, opts = {}) {
+  const r = await fetch('/api' + path, opts);
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.error || r.statusText);
+  return data;
+}
+const json = (method, body) => ({ method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+
+const ServerStore = {
+  kind: 'server',
+  list: () => api('/resumes'),
+  read: (n) => api(`/resumes/${enc(n)}`),
+  write: (n, text) => api(`/resumes/${enc(n)}`, { method: 'PUT', body: text }),
+  writeOnUnload: (n, text) => navigator.sendBeacon(`/api/resumes/${enc(n)}`, new Blob([text], { type: 'text/plain;charset=utf-8' })),
+  remove: (n) => api(`/resumes/${enc(n)}`, { method: 'DELETE' }),
+  rename: (n, to) => api(`/resumes/${enc(n)}/rename`, json('POST', { to })),
+  exports: () => api('/exports'),
+  createExport: (payload) => api('/exports', json('POST', payload)),
+  removeExport: (id) => api(`/exports/${enc(id)}`, { method: 'DELETE' }),
+  snapshot: (rec) => fetch('/exports/' + enc(rec.md)).then((r) => r.text()),
+  pdfUrl: (rec) => '/exports/' + enc(rec.pdf),
+  reveal: (path) => api('/reveal', json('POST', { path })),
+};
+
+const LOCAL_KEY = 'resume-editor:local';
+const LocalStore = {
+  kind: 'local',
+  db() {
+    const db = LS.get(LOCAL_KEY, null);
+    if (db) return db;
+    const legacy = LS.get('resume-editor:v1', null);
+    const init = { resumes: { [legacy ? '我的简历' : '新简历']: { text: legacy?.md || BLANK, mtime: Date.now() } }, exports: [] };
+    LS.set(LOCAL_KEY, init);
+    return init;
+  },
+  commit(db) { if (!LS.set(LOCAL_KEY, db)) throw new Error('浏览器存储已满'); },
+  async list() {
+    return Object.entries(this.db().resumes).map(([name, r]) => ({ name, mtime: r.mtime }))
+      .sort((a, b) => a.name.localeCompare(b.name, 'zh'));
+  },
+  async read(name) {
+    const r = this.db().resumes[name];
+    if (!r) throw new Error('文件不存在');
+    return { name, ...r };
+  },
+  async write(name, text) {
+    const db = this.db();
+    db.resumes[name] = { text, mtime: Date.now() };
+    this.commit(db);
+    return { name, mtime: db.resumes[name].mtime };
+  },
+  writeOnUnload(name, text) { this.write(name, text); },
+  async remove(name) { const db = this.db(); delete db.resumes[name]; this.commit(db); },
+  async rename(name, to) {
+    const db = this.db();
+    if (db.resumes[to]) throw new Error('已有同名简历');
+    db.resumes[to] = db.resumes[name]; delete db.resumes[name];
+    this.commit(db);
+    return { name: to, mtime: db.resumes[to].mtime };
+  },
+  async exports() { return { items: this.db().exports, pdf: false }; },
+  async createExport({ source, title, md }) {
+    const db = this.db();
+    const rec = { id: Math.random().toString(36).slice(2), pdf: null, md, source, title, time: Date.now() };
+    db.exports.unshift(rec);
+    this.commit(db);
+    return rec;
+  },
+  async removeExport(id) { const db = this.db(); db.exports = db.exports.filter((e) => e.id !== id); this.commit(db); },
+  async snapshot(rec) { return rec.md; },
+};
+
+let store = LocalStore;
+
+/* ---------- 应用状态 ---------- */
+let docs = [];
+let exportsList = [];
+let canPdf = false;
+let current = null;
+let text = '';
+let loadedMtime = 0;
+let dirty = false;
+let saveTimer = null;
+let saving = Promise.resolve();
+
+/* ---------- Markdown → 简历 HTML ---------- */
+function escapeHtml(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function inline(t) {
+  let s = escapeHtml(t);
+  s = s.replace(/\[\[(.+?)\]\]/g, '<span class="r-tag">$1</span>');
+  s = s.replace(/\[([^\[\]]+?)\]\((\S+?)\)/g, '<a class="r-link" href="$2" target="_blank">$1</a>');
+  s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  return s;
+}
+
+function render(md, photo) {
+  const lines = md.replace(/\r\n?/g, '\n').split('\n');
+  let html = '';
+  let header = null;
+  let inSection = false;
+  let listDepth = 0;
+
+  const closeLists = (to = 0) => {
+    while (listDepth > to) { html += '</li></ul>'; listDepth--; }
+  };
+  const closeHeader = () => {
+    if (!header) return;
+    const photoHtml = photo ? `<img class="r-photo" src="${photo}" alt="照片" />` : '';
+    html += `<div class="r-header${photo ? ' has-photo' : ''}">${photoHtml}`
+      + `<div class="r-name" data-line="${header.line}">${inline(header.name)}</div>`
+      + header.contact.map(([c, i]) => `<div class="r-contact" data-line="${i}">${inline(c)}</div>`).join('')
+      + '</div>';
+    header = null;
+  };
+  const closeSection = () => {
+    closeLists();
+    if (inSection) { html += '</section>'; inSection = false; }
+  };
+
+  lines.forEach((raw, i) => {
+    if (!raw.trim()) return;
+    const line = raw.trimEnd();
+    let m;
+
+    if ((m = line.match(/^#\s+(.*)$/))) {
+      closeSection(); closeHeader();
+      header = { name: m[1], line: i, contact: [] };
+      return;
+    }
+    if ((m = line.match(/^##\s+(.*)$/))) {
+      closeSection(); closeHeader();
+      html += `<section class="r-section"><div class="r-section-title" data-line="${i}">${inline(m[1])}</div>`;
+      inSection = true;
+      return;
+    }
+    if (header && !inSection) { header.contact.push([line.trim(), i]); return; }
+
+    if ((m = line.match(/^###\s+(.*)$/))) {
+      closeLists();
+      const [left, right = ''] = m[1].split(/\s*\|\|\s*/);
+      html += `<div class="r-entry-head" data-line="${i}"><span>${inline(left)}</span><span class="date">${inline(right)}</span></div>`;
+      return;
+    }
+    if ((m = line.match(/^(\s*)[-*](?:\s+(.*))?$/))) {
+      m[2] = m[2] || '';
+      const depth = Math.min(Math.floor(m[1].replace(/\t/g, '  ').length / 2), listDepth) + 1;
+      if (depth > listDepth) { html += `<ul class="r-list"><li data-line="${i}">`; listDepth = depth; }
+      else { closeLists(depth); html += `</li><li data-line="${i}">`; }
+      html += inline(m[2]);
+      return;
+    }
+    closeLists();
+    html += `<p data-line="${i}">${inline(line.trim())}</p>`;
+  });
+  closeSection(); closeHeader();
+  return html;
+}
+
+/* ---------- 编辑器语法高亮 ---------- */
+const mark = (s) => `<span class="t-mark">${s}</span>`;
+function hlInline(raw) {
+  let s = escapeHtml(raw);
+  s = s.replace(/\*\*(.+?)\*\*/g, `${mark('**')}<span class="t-bold">$1</span>${mark('**')}`);
+  s = s.replace(/\[\[(.+?)\]\]/g, `${mark('[[')}<span class="t-tag">$1</span>${mark(']]')}`);
+  s = s.replace(/\[([^\[\]]+?)\]\((\S+?)\)/g, `${mark('[')}<span class="t-link">$1</span>${mark('](')}<span class="t-url">$2</span>${mark(')')}`);
+  return s;
+}
+function hlLine(raw) {
+  let m;
+  if ((m = raw.match(/^(#{1,3})(\s+)(.*)$/))) {
+    const level = m[1].length;
+    let body;
+    if (level === 3 && m[3].includes('||')) {
+      const at = m[3].indexOf('||');
+      body = hlInline(m[3].slice(0, at)) + mark('||') + `<span class="t-date">${hlInline(m[3].slice(at + 2))}</span>`;
+    } else {
+      body = hlInline(m[3]);
+    }
+    return `${mark(m[1])}${m[2]}<span class="t-h${level}">${body}</span>`;
+  }
+  if ((m = raw.match(/^(\s*)([-*])(\s+)(.*)$/))) {
+    return `${m[1]}<span class="t-bullet">${m[2]}</span>${m[3]}${hlInline(m[4])}`;
+  }
+  return hlInline(raw);
+}
+function paintEditor() {
+  els.hl.innerHTML = text.split('\n').map((l, i) => `<span data-l="${i}">${hlLine(l)}</span>`).join('\n') + '\n ';
+}
+
+/* ---------- 排版参数 & 自动一页 ---------- */
+function applyParams(p) {
+  const s = els.page.style;
+  s.setProperty('--fs', p.fs + 'px');
+  s.setProperty('--lh', p.lh);
+  s.setProperty('--gap', p.gap + 'px');
+  s.setProperty('--px', p.px + 'px');
+  s.setProperty('--py', Math.round(p.px * 0.8) + 'px');
+}
+
+function paramsAt(t) {
+  return { fs: 9 + t * 6, lh: 1.28 + t * 0.47, gap: 3 + t * 15, px: 22 + t * 26 };
+}
+
+function overflowPx() {
+  const cs = getComputedStyle(els.page);
+  const avail = els.page.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+  return els.content.offsetHeight - avail;
+}
+
+function autoFit() {
+  let lo = 0, hi = 1;
+  applyParams(paramsAt(hi));
+  if (overflowPx() <= 0) return paramsAt(hi);
+  applyParams(paramsAt(lo));
+  if (overflowPx() > 0) return paramsAt(lo);
+  for (let i = 0; i < 18; i++) {
+    const mid = (lo + hi) / 2;
+    applyParams(paramsAt(mid));
+    if (overflowPx() <= 0) lo = mid; else hi = mid;
+  }
+  return paramsAt(lo);
+}
+
+function updatePreview() {
+  if (!current) return;
+  const s = docSettings(current);
+  els.content.innerHTML = render(text, s.photo ? photoSrc() : '');
+  if (s.autoFit) s.params = autoFit();
+  applyParams(s.params);
+  syncLayoutPanel();
+  const over = overflowPx();
+  els.status.className = 'fit' + (over > 0 ? ' warn' : '');
+  els.status.textContent = over > 0 ? `超出一页 ${Math.ceil(over)}px` : (s.autoFit ? '一页' : `余 ${Math.floor(-over)}px`);
+  savePrefs();
+}
+
+function syncLayoutPanel() {
+  const s = docSettings(current);
+  els.autoFit.checked = s.autoFit;
+  els.showPhoto.checked = s.photo;
+  els.sliders.classList.toggle('disabled', s.autoFit);
+  for (const { key, unit, fmt } of SLIDERS) {
+    $(key).value = s.params[key];
+    $(key + 'Val').textContent = fmt(s.params[key]) + unit;
+  }
+}
+
+function fitPreview() {
+  const pad = parseFloat(getComputedStyle(els.pane).paddingLeft) * 2;
+  const pageW = els.page.offsetWidth, pageH = els.page.offsetHeight;
+  const avail = els.pane.clientWidth - pad;
+  const scale = Math.min(1, avail / pageW);
+  els.holder.style.transform = `scale(${scale})`;
+  els.holder.style.width = pageW + 'px';
+  els.holder.style.height = pageH * scale + 'px';
+  els.holder.style.marginLeft = Math.max(0, (avail - pageW * scale) / 2) + 'px';
+}
+
+/* ---------- 保存 ---------- */
+function setSaveState(t, warn = false) {
+  els.saveState.textContent = t;
+  els.saveState.classList.toggle('warn', warn);
+}
+
+function scheduleSave() {
+  dirty = true;
+  setSaveState('编辑中');
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(flush, 600);
+}
+
+function flush() {
+  clearTimeout(saveTimer);
+  if (!dirty || !current) return saving;
+  dirty = false;
+  const name = current, body = text;
+  saving = saving.then(async () => {
+    try {
+      const r = await store.write(name, body);
+      if (name === current) loadedMtime = r.mtime;
+      const d = docs.find((x) => x.name === name);
+      if (d) { d.mtime = r.mtime; renderResumeList(); }
+      if (!dirty) setSaveState('已保存');
+    } catch (e) {
+      dirty = true;
+      setSaveState('保存失败：' + e.message, true);
+    }
+  });
+  return saving;
+}
+
+/* ---------- 文档操作 ---------- */
+function uniqueName(base) {
+  const names = new Set(docs.map((d) => d.name));
+  if (!names.has(base)) return base;
+  let i = 2;
+  while (names.has(`${base}-${i}`)) i++;
+  return `${base}-${i}`;
+}
+
+async function refreshDocs() {
+  docs = await store.list();
+  renderResumeList();
+}
+
+async function openDoc(name, { keepScroll = false } = {}) {
+  await flush();
+  const d = await store.read(name);
+  current = d.name;
+  text = d.text;
+  loadedMtime = d.mtime;
+  els.source.value = text;
+  prefs.current = current;
+  savePrefs();
+  els.docName.textContent = current;
+  document.title = current;
+  setSaveState('已保存');
+  paintEditor();
+  updatePreview();
+  fitPreview();
+  renderResumeList();
+  if (!keepScroll) els.scroll.scrollTop = 0;
+}
+
+async function createDoc(mode) {
+  await flush();
+  const name = uniqueName(mode === 'copy' ? `${current}-副本` : '新简历');
+  await store.write(name, mode === 'copy' ? text : mode);
+  if (mode === 'copy') prefs.docs[name] = structuredClone(docSettings(current));
+  await refreshDocs();
+  await openDoc(name);
+  startRename(name);
+}
+
+async function renameDoc(name, to) {
+  to = to.trim().replace(/\.md$/i, '');
+  if (!to || to === name) return;
+  if (name === current) await flush();
+  try {
+    await store.rename(name, to);
+  } catch (e) { toast(e.message); return; }
+  if (prefs.docs[name]) { prefs.docs[to] = prefs.docs[name]; delete prefs.docs[name]; }
+  if (current === name) {
+    current = to; prefs.current = to;
+    els.docName.textContent = to; document.title = to;
+  }
+  savePrefs();
+  await refreshDocs();
+}
+
+async function deleteDoc(name) {
+  const where = store.kind === 'server' ? '文件会移到 resumes/.trash，可找回。' : '';
+  if (!confirm(`删除「${name}」？${where}`)) return;
+  if (name === current) { dirty = false; clearTimeout(saveTimer); await saving; }
+  await store.remove(name);
+  delete prefs.docs[name];
+  savePrefs();
+  await refreshDocs();
+  if (name === current) {
+    current = null;
+    if (docs.length) await openDoc(docs[0].name);
+    else { await store.write('新简历', BLANK); await refreshDocs(); await openDoc('新简历'); }
+  }
+}
+
+/* ---------- 侧栏渲染 ---------- */
+function relTime(ms) {
+  const d = new Date(ms), now = new Date();
+  const diff = (now - d) / 60000;
+  if (diff < 1) return '刚刚';
+  if (diff < 60) return `${Math.floor(diff)} 分钟前`;
+  const hm = d.toTimeString().slice(0, 5);
+  if (d.toDateString() === now.toDateString()) return hm;
+  const md = `${d.getMonth() + 1}/${d.getDate()}`;
+  return d.getFullYear() === now.getFullYear() ? md : `${d.getFullYear()}/${md}`;
+}
+const fullTime = (ms) => {
+  const d = new Date(ms);
+  return `${d.getMonth() + 1}/${d.getDate()} ${d.toTimeString().slice(0, 5)}`;
+};
+
+const MORE_ICON = '<svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor"><circle cx="3.5" cy="8" r="1.2"/><circle cx="8" cy="8" r="1.2"/><circle cx="12.5" cy="8" r="1.2"/></svg>';
+
+function renderResumeList() {
+  els.resumeList.innerHTML = docs.map((d) => `
+    <li class="item${d.name === current ? ' active' : ''}" data-name="${escapeHtml(d.name)}" title="${escapeHtml(d.name)}">
+      <span class="body"><span class="label">${escapeHtml(d.name)}</span></span>
+      <span class="meta">${relTime(d.mtime)}</span>
+      <button class="more" title="更多">${MORE_ICON}</button>
+    </li>`).join('');
+}
+
+function renderExportList() {
+  if (!exportsList.length) {
+    els.exportList.innerHTML = '<li class="empty">还没有导出过</li>';
+    return;
+  }
+  els.exportList.innerHTML = exportsList.map((r) => {
+    const sub = [r.source && r.source !== r.title ? r.source : '', fullTime(r.time), r.pdf ? '' : '仅快照']
+      .filter(Boolean).join(' · ');
+    return `
+    <li class="item" data-id="${escapeHtml(r.id)}" title="${escapeHtml(r.pdf || r.title)}">
+      <span class="body"><span class="label">${escapeHtml(r.source || r.title)}</span><span class="sub">${escapeHtml(sub)}</span></span>
+      <button class="more" title="更多">${MORE_ICON}</button>
+    </li>`;
+  }).join('');
+}
+
+async function refreshExports() {
+  try {
+    const r = await store.exports();
+    exportsList = r.items;
+    canPdf = r.pdf;
+  } catch { exportsList = []; }
+  renderExportList();
+}
+
+function renderFoot() {
+  if (store.kind === 'server') {
+    els.sbFoot.innerHTML = '文件保存在 <button data-reveal="resumes">resumes/</button> 和 <button data-reveal="exports">exports/</button>';
+  } else {
+    els.sbFoot.innerHTML = '浏览器本地模式。双击「启动简历编辑器.command」可把简历存成 md 文件。';
+  }
+}
+
+/* ---------- 菜单 / 弹层 / 提示 ---------- */
+let menuAnchor = null;
+function openMenu(anchor, items) {
+  closePops();
+  els.menu.innerHTML = items.map((it, i) => it === '-' ? '<hr />' : `<button data-i="${i}" class="${it.danger ? 'danger' : ''}">${it.label}</button>`).join('');
+  els.menu.onclick = (e) => {
+    const b = e.target.closest('button[data-i]');
+    if (!b) return;
+    closePops();
+    items[b.dataset.i].action();
+  };
+  placePop(els.menu, anchor, 'left');
+  menuAnchor = anchor;
+  anchor.classList.add('open');
+}
+
+function placePop(pop, anchor, align = 'right') {
+  pop.hidden = false;
+  const r = anchor.getBoundingClientRect();
+  const w = pop.offsetWidth, h = pop.offsetHeight;
+  let left = align === 'right' ? r.right - w : r.left;
+  left = Math.max(8, Math.min(left, innerWidth - w - 8));
+  let top = r.bottom + 6;
+  if (top + h > innerHeight - 8) top = Math.max(8, r.top - h - 6);
+  pop.style.left = left + 'px';
+  pop.style.top = top + 'px';
+}
+
+function togglePop(pop, anchor) {
+  const wasOpen = !pop.hidden;
+  closePops();
+  if (wasOpen) return;
+  placePop(pop, anchor);
+  anchor.classList.add('open');
+}
+
+function closePops() {
+  for (const p of [els.layoutPop, els.helpPop, els.menu]) p.hidden = true;
+  document.querySelectorAll('.open').forEach((x) => x.classList.remove('open'));
+  menuAnchor = null;
+}
+
+let toastTimer;
+function toast(msg, action) {
+  $('toastText').textContent = msg;
+  const btn = $('toastAction');
+  btn.hidden = !action;
+  if (action) { btn.textContent = action.label; btn.onclick = () => { action.run(); hideToast(); }; }
+  $('toast').classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(hideToast, action ? 6000 : 2600);
+}
+const hideToast = () => $('toast').classList.remove('show');
+
+/* ---------- 重命名 ---------- */
+function startRename(name) {
+  const li = [...els.resumeList.children].find((x) => x.dataset.name === name);
+  if (!li) return;
+  const label = li.querySelector('.label');
+  const input = document.createElement('input');
+  input.className = 'rename';
+  input.value = name;
+  label.replaceWith(input);
+  input.focus();
+  input.select();
+  let done = false;
+  const finish = async (commit) => {
+    if (done) return;
+    done = true;
+    if (commit) await renameDoc(name, input.value);
+    renderResumeList();
+  };
+  input.addEventListener('keydown', (e) => {
+    if (e.isComposing) return;
+    if (e.key === 'Enter') { e.preventDefault(); finish(true); }
+    if (e.key === 'Escape') { e.preventDefault(); finish(false); }
+  });
+  input.addEventListener('blur', () => finish(true));
+  input.addEventListener('click', (e) => e.stopPropagation());
+}
+
+/* ---------- 编辑辅助 ---------- */
+function insertText(str) {
+  if (!document.execCommand('insertText', false, str)) {
+    const { selectionStart: a, selectionEnd: b } = els.source;
+    els.source.setRangeText(str, a, b, 'end');
+    els.source.dispatchEvent(new Event('input'));
+  }
+}
+
+function lineRange(v, a, b) {
+  const start = v.lastIndexOf('\n', a - 1) + 1;
+  let end = v.indexOf('\n', b > a && v[b - 1] === '\n' ? b - 1 : b);
+  if (end < 0) end = v.length;
+  return [start, end];
+}
+
+function indentLines(outdent) {
+  const ta = els.source, v = ta.value;
+  const a = ta.selectionStart, b = ta.selectionEnd;
+  const [start, end] = lineRange(v, a, b);
+  const lines = v.slice(start, end).split('\n');
+  const out = lines.map((l) => (outdent ? l.replace(/^ {1,2}/, '') : '  ' + l));
+  const next = out.join('\n');
+  if (next === v.slice(start, end)) return;
+  ta.setSelectionRange(start, end);
+  insertText(next);
+  if (a === b) {
+    const p = Math.max(start, a + out[0].length - lines[0].length);
+    ta.setSelectionRange(p, p);
+  } else {
+    ta.setSelectionRange(start, start + next.length);
+  }
+}
+
+function onEnter(e) {
+  const ta = els.source, v = ta.value, a = ta.selectionStart;
+  if (a !== ta.selectionEnd) return;
+  const [start] = lineRange(v, a, a);
+  const before = v.slice(start, a);
+  const m = before.match(/^(\s*)([-*])\s+(.*)$/);
+  if (!m) return;
+  e.preventDefault();
+  if (!m[3].trim() && !v.slice(a, lineRange(v, a, a)[1]).trim()) {
+    ta.setSelectionRange(start, a);
+    insertText('');
+    return;
+  }
+  insertText(`\n${m[1]}${m[2]} `);
+}
+
+function toggleBold() {
+  const ta = els.source, v = ta.value;
+  const a = ta.selectionStart, b = ta.selectionEnd;
+  const sel = v.slice(a, b);
+  if (v.slice(a - 2, a) === '**' && v.slice(b, b + 2) === '**') {
+    ta.setSelectionRange(a - 2, b + 2);
+    insertText(sel);
+    ta.setSelectionRange(a - 2, b - 2);
+  } else {
+    insertText(`**${sel}**`);
+    ta.setSelectionRange(a + 2, b + 2);
+  }
+}
+
+function gotoLine(n) {
+  const lines = text.split('\n');
+  let pos = 0;
+  for (let i = 0; i < n; i++) pos += lines[i].length + 1;
+  const end = pos + (lines[n] || '').length;
+  els.source.focus({ preventScroll: true });
+  els.source.setSelectionRange(end, end);
+  const span = els.hl.querySelector(`[data-l="${n}"]`);
+  if (!span) return;
+  els.scroll.scrollTo({ top: Math.max(0, span.offsetTop - els.scroll.clientHeight / 3), behavior: 'smooth' });
+  span.classList.add('ln-flash');
+  setTimeout(() => span.classList.remove('ln-flash'), 900);
+}
+
+/* ---------- 导出 ---------- */
+function resumeTitle() {
+  const m = text.match(/^#\s+(.+)$/m);
+  return m ? m[1].trim() : current;
+}
+
+function buildExportHtml() {
+  const page = els.page.cloneNode(true);
+  page.querySelectorAll('[data-line]').forEach((x) => x.removeAttribute('data-line'));
+  return `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>${escapeHtml(current)}</title>`
+    + `<style>${$('resume-css').textContent} html,body{margin:0;background:#fff}.page{box-shadow:none}</style>`
+    + `</head><body>${page.outerHTML}</body></html>`;
+}
+
+function printFallback() {
+  const old = document.title;
+  document.title = current;
+  window.print();
+  document.title = old;
+}
+
+async function exportPdf() {
+  if (!current || els.btnExport.disabled) return;
+  closePops();
+  await flush();
+  els.btnExport.disabled = true;
+  els.btnExport.textContent = '导出中…';
+  try {
+    const rec = await store.createExport({ source: current, title: resumeTitle(), md: text, html: buildExportHtml() });
+    await refreshExports();
+    flashExport(rec.id);
+    if (rec.pdf) toast(`已保存到 exports/${rec.pdf}`, { label: '打开', run: () => window.open(store.pdfUrl(rec)) });
+    else printFallback();
+  } catch (e) {
+    toast('导出失败：' + e.message);
+  } finally {
+    els.btnExport.disabled = false;
+    els.btnExport.textContent = '导出 PDF';
+  }
+}
+
+function flashExport(id) {
+  const li = [...els.exportList.children].find((x) => x.dataset.id === id);
+  if (!li) return;
+  li.classList.add('flash');
+  li.scrollIntoView({ block: 'nearest' });
+}
+
+async function restoreExport(rec) {
+  const md = await store.snapshot(rec);
+  const name = uniqueName(`${rec.source || rec.title}-${fullTime(rec.time).replace(/[/: ]/g, '')}`);
+  await flush();
+  await store.write(name, md);
+  await refreshDocs();
+  await openDoc(name);
+  toast(`已用导出版本新建「${name}」`);
+}
+
+async function deleteExport(rec) {
+  const where = store.kind === 'server' ? '文件会移到 exports/.trash。' : '';
+  if (!confirm(`删除这条导出记录？${where}`)) return;
+  await store.removeExport(rec.id);
+  await refreshExports();
+}
+
+/* ---------- 事件 ---------- */
+let previewTimer;
+els.source.addEventListener('input', () => {
+  text = els.source.value;
+  paintEditor();
+  scheduleSave();
+  clearTimeout(previewTimer);
+  previewTimer = setTimeout(updatePreview, 120);
+});
+
+els.source.addEventListener('keydown', (e) => {
+  if (e.isComposing || e.keyCode === 229) return;
+  const mod = e.metaKey || e.ctrlKey;
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    const v = els.source.value, a = els.source.selectionStart;
+    const [start, end] = lineRange(v, a, els.source.selectionEnd);
+    const isList = /^\s*[-*]\s/.test(v.slice(start, end));
+    if (e.shiftKey || isList || a !== els.source.selectionEnd) indentLines(e.shiftKey);
+    else insertText('  ');
+  } else if (e.key === 'Enter' && !e.shiftKey && !mod) {
+    onEnter(e);
+  } else if (mod && e.key.toLowerCase() === 'b') {
+    e.preventDefault();
+    toggleBold();
+  }
+});
+
+window.addEventListener('keydown', (e) => {
+  const mod = e.metaKey || e.ctrlKey;
+  if (e.key === 'Escape') closePops();
+  if (!mod) return;
+  const k = e.key.toLowerCase();
+  if (k === 's') { e.preventDefault(); flush(); }
+  else if (k === 'p') { e.preventDefault(); exportPdf(); }
+  else if (e.key === '\\') { e.preventDefault(); toggleSidebar(); }
+});
+
+document.addEventListener('mousedown', (e) => {
+  if (e.target.closest('.pop') || e.target.closest('.open')) return;
+  closePops();
+});
+window.addEventListener('resize', closePops);
+els.scroll.addEventListener('scroll', closePops, { passive: true });
+
+els.content.addEventListener('click', (e) => {
+  const el = e.target.closest('[data-line]');
+  if (el) { e.preventDefault(); gotoLine(+el.dataset.line); }
+});
+
+els.resumeList.addEventListener('click', (e) => {
+  const li = e.target.closest('.item');
+  if (!li || li.querySelector('input.rename')) return;
+  const name = li.dataset.name;
+  if (e.target.closest('.more')) {
+    openMenu(e.target.closest('.more'), [
+      { label: '重命名', action: () => startRename(name) },
+      { label: '复制一份', action: async () => { if (name !== current) await openDoc(name); createDoc('copy'); } },
+      ...(store.kind === 'server' ? [{ label: '在 Finder 中显示', action: () => store.reveal(`resumes/${name}.md`) }] : []),
+      '-',
+      { label: '删除', danger: true, action: () => deleteDoc(name) },
+    ]);
+    return;
+  }
+  if (name !== current) openDoc(name);
+});
+els.resumeList.addEventListener('dblclick', (e) => {
+  const li = e.target.closest('.item');
+  if (li && !e.target.closest('.more')) startRename(li.dataset.name);
+});
+
+els.exportList.addEventListener('click', (e) => {
+  const li = e.target.closest('.item');
+  if (!li) return;
+  const rec = exportsList.find((r) => r.id === li.dataset.id);
+  if (!rec) return;
+  const items = [
+    ...(rec.pdf ? [{ label: '打开 PDF', action: () => window.open(store.pdfUrl(rec)) }] : []),
+    ...(rec.pdf && store.kind === 'server' ? [{ label: '在 Finder 中显示', action: () => store.reveal(`exports/${rec.pdf}`) }] : []),
+    ...(rec.md ? [{ label: '用这个版本新建简历', action: () => restoreExport(rec) }] : []),
+    '-',
+    { label: '删除记录', danger: true, action: () => deleteExport(rec) },
+  ];
+  if (e.target.closest('.more') || !rec.pdf) openMenu(e.target.closest('.more') || li, items);
+  else window.open(store.pdfUrl(rec));
+});
+
+els.sbFoot.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-reveal]');
+  if (b) store.reveal(b.dataset.reveal);
+});
+
+$('btnNew').addEventListener('click', (e) => openMenu(e.currentTarget, [
+  { label: '复制当前简历', action: () => createDoc('copy') },
+  { label: '空白模板', action: () => createDoc(BLANK) },
+]));
+
+els.docName.addEventListener('click', () => {
+  if (!prefs.sidebar) toggleSidebar();
+  startRename(current);
+});
+
+function toggleSidebar() {
+  prefs.sidebar = !prefs.sidebar;
+  els.app.classList.toggle('no-sidebar', !prefs.sidebar);
+  savePrefs();
+}
+$('btnSidebar').addEventListener('click', toggleSidebar);
+$('btnLayout').addEventListener('click', (e) => togglePop(els.layoutPop, e.currentTarget));
+$('btnHelp').addEventListener('click', (e) => togglePop(els.helpPop, e.currentTarget));
+els.btnExport.addEventListener('click', exportPdf);
+
+els.autoFit.addEventListener('change', () => { docSettings(current).autoFit = els.autoFit.checked; updatePreview(); });
+els.showPhoto.addEventListener('change', () => { docSettings(current).photo = els.showPhoto.checked; updatePreview(); });
+for (const { key } of SLIDERS) {
+  $(key).addEventListener('input', (e) => {
+    docSettings(current).params[key] = parseFloat(e.target.value);
+    updatePreview();
+  });
+}
+
+$('btnPhoto').addEventListener('click', () => $('photoInput').click());
+$('photoInput').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const img = new Image();
+  img.onload = () => {
+    const canvas = document.createElement('canvas');
+    const ratio = Math.min(1, 520 / img.height);
+    canvas.width = img.width * ratio; canvas.height = img.height * ratio;
+    canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+    if (!LS.set(PHOTO_KEY, canvas.toDataURL('image/jpeg', 0.9))) toast('照片过大，存不下');
+    URL.revokeObjectURL(img.src);
+    docSettings(current).photo = true;
+    updatePreview();
+  };
+  img.src = URL.createObjectURL(file);
+  e.target.value = '';
+});
+$('btnPhotoReset').addEventListener('click', () => { localStorage.removeItem(PHOTO_KEY); updatePreview(); });
+
+/* 分栏拖动 */
+const splitter = $('splitter');
+splitter.addEventListener('pointerdown', (e) => {
+  splitter.setPointerCapture(e.pointerId);
+  splitter.classList.add('dragging');
+  els.panes.classList.add('dragging');
+});
+splitter.addEventListener('pointermove', (e) => {
+  if (!splitter.hasPointerCapture(e.pointerId)) return;
+  const r = els.panes.getBoundingClientRect();
+  const x = Math.max(300, Math.min(e.clientX - r.left, r.width - 320));
+  prefs.split = Math.round((x / r.width) * 1000) / 10;
+  els.panes.style.setProperty('--ed', prefs.split + '%');
+});
+splitter.addEventListener('pointerup', () => {
+  splitter.classList.remove('dragging');
+  els.panes.classList.remove('dragging');
+  savePrefs();
+});
+splitter.addEventListener('dblclick', () => {
+  prefs.split = null;
+  els.panes.style.removeProperty('--ed');
+  savePrefs();
+});
+
+/* 在其他编辑器里改了 md，切回来时自动同步 */
+window.addEventListener('focus', async () => {
+  if (store.kind !== 'server' || !current) return;
+  try {
+    await Promise.all([refreshDocs(), refreshExports()]);
+    const d = docs.find((x) => x.name === current);
+    if (!d) return;
+    if (d.mtime > loadedMtime && !dirty) {
+      const pos = els.source.selectionStart;
+      await openDoc(current, { keepScroll: true });
+      els.source.setSelectionRange(pos, pos);
+      toast('已载入文件的最新内容');
+    }
+  } catch {}
+});
+
+window.addEventListener('beforeunload', () => {
+  if (dirty && current) store.writeOnUnload(current, text);
+});
+
+new ResizeObserver(fitPreview).observe(els.pane);
+
+/* ---------- 初始化 ---------- */
+async function init() {
+  els.app.classList.toggle('no-sidebar', !prefs.sidebar);
+  if (prefs.split) els.panes.style.setProperty('--ed', prefs.split + '%');
+  if (location.protocol.startsWith('http')) {
+    try { if ((await api('/ping')).app === 'resume-editor') store = ServerStore; } catch {}
+  }
+  renderFoot();
+  await refreshDocs();
+  if (!docs.length) {
+    await store.write('新简历', BLANK);
+    await refreshDocs();
+  }
+  const first = docs.find((d) => d.name === prefs.current) ? prefs.current : docs[0].name;
+  await openDoc(first);
+  refreshExports();
+  if (document.fonts) document.fonts.ready.then(() => { updatePreview(); fitPreview(); });
+}
+init();
+</script>
+</body>
+</html>

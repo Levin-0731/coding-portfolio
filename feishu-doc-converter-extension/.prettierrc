@@ -1,0 +1,7 @@
+{
+    "semi": true,            // 语句末尾加分号
+    "singleQuote": true,     // 使用单引号
+    "tabWidth": 2,           // 缩进宽度为 2 个空格
+    "trailingComma": "es5",  // 末尾逗号
+    "useTabs": false         // 使用空格而不是制表符
+  }

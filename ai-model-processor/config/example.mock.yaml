@@ -1,0 +1,21 @@
+provider: mock
+model: mock-echo
+task_type: text_to_text
+
+input:
+  path: examples/sample_input.csv
+  format: csv
+  id_column: id
+  fields:
+    text: text
+
+output:
+  path: outputs/example_output.csv
+  result_column: result
+  error_column: error
+
+prompt:
+  template: "请把下面的文本改写得更简洁：{text}"
+
+options:
+  mock_prefix: "DEMO"

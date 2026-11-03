@@ -1,0 +1,52 @@
+:root {
+  /* font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif; */
+  font-family: -apple-system, BlinkMacSystemFont, "San Francisco", "Segoe UI",
+    Helvetica, Arial, sans-serif;
+
+  line-height: 1.5;
+  font-weight: 400;
+
+  /* color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale; */
+
+  --el-color-primary: #454f5e; /* 主色调 */
+  --el-color-primary-light-3: #1b1b26; /* 悬浮 */
+  --el-color-primary-dark-2: #000002; /* 点击 */
+  --el-color-primary-light-5: #bfbcbc;
+  --el-color-primary-light-9: #ffffff;
+  --el-color-primary-light-8: #f5f5f5;
+  --el-tabs-header-height: 54px;
+}
+body {
+  /* 隐藏滚动条，但保留滚动功能 */
+  .scrollable-element {
+    scrollbar-width: none; /* Firefox */
+  }
+  /* 隐藏滚动条 */
+  ::-webkit-scrollbar {
+    display: none;
+  }
+  color: var(--el-color-primary);
+  font-size: 14px;
+  .el-button--primary.is-plain {
+    border-color: var(--el-color-primary);
+  }
+  a {
+    color: #336df4;
+    /* text-decoration: none; */
+  }
+}
+
+.el-message-box__message {
+  width: 100%;
+}
+
+.error-message-box .el-message-box__status {
+  display: none;
+}

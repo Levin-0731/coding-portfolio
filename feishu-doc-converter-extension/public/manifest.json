@@ -1,0 +1,35 @@
+{
+  "manifest_version": 3,
+  "name": "飞书2ALL - 将飞书转换为所有平台样式",
+  "description": "目前支持公众号、小红书、知乎、人人都是产品经理、稀土掘金、CSDN的样式转换",
+  "version": "1.2",
+  "action": {
+    "default_icon": {
+      "16": "logo.png",
+      "48": "logo.png",
+      "128": "logo.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": ["clipboardWrite", "clipboardRead", "scripting"],
+  "host_permissions": [
+    "*://*.feishu.cn/*",
+    "https://open.feishu.cn/*",
+    "*://*.weixin.qq.com/*",
+    "*://zhuanlan.zhihu.com/*",
+    "*://*.woshipm.com/*",
+    "*://*.juejin.cn/*",
+    "*://mp.csdn.net/*",
+    "https://www.google-analytics.com/*"
+  ],
+  "icons": {
+    "16": "logo.png",
+    "48": "logo.png",
+    "128": "logo.png"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  }
+}

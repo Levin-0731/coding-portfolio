@@ -1,0 +1,5 @@
+.DS_Store
+.trash/
+.export-*.html
+exports/*.pdf
+exports/index.json
